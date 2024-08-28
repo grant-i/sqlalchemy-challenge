@@ -40,12 +40,19 @@ app = Flask(__name__)
 
 @app.route("/")
 def welcome():
-    return
+    return (
+        f"Welcome to the Surfs Up API!<br/>"
+        f"Available Routes:<br/>"
+        f"/api/v1.0/precipitation<br/>"
+        f"/api/v1.0/stations<br/>"
+        f"/api/v1.0/tobs<br/>"
+    )
 
 @app.route("/api/v1.0/precipitation")
 def precipitation():
     # Calculate the date 1 year ago from today
-    last_year = dt.datetime.now() - dt.timedelta(days=365)
+    last_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first()[0]
+    last_year = dt.datetime.strptime(last_date, '%Y-%m-%d') - dt.timedelta(days=365)
 
     # Query the precipitation data for the last year
     results = session.query(Measurement.date, Measurement.prcp).filter(Measurement.date >= last_year).all()
@@ -68,12 +75,15 @@ def stations():
 @app.route("/api/v1.0/tobs")
 def tobs():
     # Calculate the date 1 year ago from today
-    last_year = dt.datetime.now() - dt.timedelta(days=365)
+    last_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first()[0]
+    last_year = dt.datetime.strptime(last_date, '%Y-%m-%d') - dt.timedelta(days=365)
+
 
     # Query the temperature observations (tobs) for the most active station for the last year
-    results = session.query(Measurement.date, Measurement.tobs).filter(
-    Measurement.station == 'USC00519281').filter(Measurement.date >= last_year).all()
-
+    results = session.query(Measurement.date, Measurement.tobs).\
+        filter(Measurement.station == 'USC00519281').\
+        filter(Measurement.date >= last_year).all()
+        
     # Create a list of dictionaries for each observation
     tobs_data = {date: tobs for date, tobs in results}
 
